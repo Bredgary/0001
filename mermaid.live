@@ -1,0 +1,35 @@
+graph TD
+    %% Declaración de Subgrafos para agrupar visualmente
+    subgraph "Externo"
+        User["<i class='fa fa-user'></i> Usuario Final"]
+        GraphAPI["Microsoft Graph API"]
+        GSheets["Google Sheets API"]
+    end
+
+    subgraph "Plataforma Azure"
+        SWA[Azure Static Web Apps <br> (Dashboard React)]
+        PubSub[Azure Web PubSub]
+        ACA[Container App <br> (Backend FastAPI)]
+        ACJ[Container App Job <br> (Scraper @ 05:00)]
+        ADLS[Azure Data Lake Storage Gen2]
+        KV[Azure Key Vault <br> (Secretos y Tokens)]
+        Monitor[Azure Monitor]
+        Alerts((Alertas Mail/Teams))
+    end
+
+    %% Flujo de Datos y Relaciones
+    User -- "1. Interactúa" --> SWA
+    SWA -- "2. Conexión WebSocket" --> PubSub
+    PubSub -- "3. Retransmite" --> ACA
+    ACA -- "4. Lee datos procesados" --> ADLS
+    ACA -- "Lee datos en tiempo real" --> GSheets
+
+    ACJ -- "5. Descarga archivos" --> GraphAPI
+    ACJ -- "6. Escribe Parquet" --> ADLS
+
+    ACA -- "7. Obtiene secretos" --> KV
+    ACJ -- "7. Obtiene secretos" --> KV
+
+    ACA -- "8. Envía Logs/Métricas" --> Monitor
+    ACJ -- "8. Envía Logs/Métricas" --> Monitor
+    Monitor -- "Dispara en caso de fallo" --> Alerts
